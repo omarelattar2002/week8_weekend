@@ -35,7 +35,24 @@ class Item {
     public get id(): string {
         return this._id;
     }
+
+    public itemElement(): HTMLDivElement {
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("item", "card");
+        itemDiv.innerHTML = `
+            <h3>${this._name}</h3>
+            <p>${this._description}</p>
+            <p>Price: $${this._price}</p>
+            <button class="btn btn-primary" id="add-to-cart-button">Add to Cart</button>`;
+
+        const addToCartButtons = itemDiv.querySelector("#add-to-cart-button") as HTMLButtonElement;
+        addToCartButtons.onclick = () => {
+        Shop.myUser!.addToCart(this);
+        }
+        return itemDiv   
+    }
 }
+
 
 class User {
     private _name : string
@@ -133,6 +150,7 @@ class User {
 class Shop {
     private _name:string
     private _items: Item[]
+    static myUser: any;
 
     constructor(name:string){
         this._name = name
@@ -150,5 +168,32 @@ class Shop {
     public get items(): Item[] {
         return this._items;
     }
-    showItems()
+
+    static updateCart() {
+        const cartDiv = document.getElementById("cart") as HTMLElement;
+        if (Shop.myUser!.cart.length <= 0) {
+            cartDiv.innerHTML = `<H2>My Cart</H2>No items in cart`;
+        } else {
+            cartDiv.replaceChildren(Shop.myUser!.cartHTMLElement());
+            cartDiv.innerHTML = ('<H2>My Cart</H2>' + cartDiv.innerHTML);
+            Shop.myUser!.addRemoveEventListeners();
+        }
+    }
+
+    static loginUser(event: Event) {
+        event.preventDefault();
+        Shop.myUser = User.loginInUser();
+        if (Shop.myUser) {
+            document.getElementById("login")!.remove();
+            new Shop(Shop.myUser.name);
+        }
+    }
+
+
+    public showItems(): void {
+        const shopDiv = document.getElementById("shop") as HTMLDivElement;
+        this._items.forEach(item => {
+            shopDiv.appendChild(item.itemElement());
+        });
+    }
 }
